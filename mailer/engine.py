@@ -52,7 +52,7 @@ def send_all():
     Send all eligible messages in the queue.
     """
     
-    lock = FileLock("send_mail")
+    lock = FileLock(settings.LOCK_FOLDER)
     
     logging.debug("acquiring lock...")
     try:
