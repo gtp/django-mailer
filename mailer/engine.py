@@ -7,6 +7,7 @@ from socket import error as socket_error
 
 from django.conf import settings
 from django.core.mail import send_mail as core_send_mail
+from django.core.mail import mail_admins
 try:
     # Django 1.2
     from django.core.mail import get_connection
@@ -16,7 +17,6 @@ except ImportError:
     get_connection = lambda backend=None, fail_silently=False, **kwds: SMTPConnection(fail_silently=fail_silently)
 
 from mailer.models import Message, DontSendEntry, MessageLog
-
 
 # when queue is empty, how long to wait (in seconds) before checking again
 EMPTY_QUEUE_SLEEP = getattr(settings, "MAILER_EMPTY_QUEUE_SLEEP", 30)
@@ -92,6 +92,13 @@ def send_all():
                 deferred += 1
                 # Get new connection, in case the connection itself has an error.
                 connection = None
+
+            if sent+deferred >= settings.EMAIL_MAX_EMAILS_PER_BATCH:
+                logging.info("Sent %d emails, having a break" % (sent+deferred))
+                mail_admins(subject="email queue overflow",
+                            message="More than %d emails in the queue, consider checking network load" % settings.EMAIL_MAX_EMAILS_PER_BATCH,
+                            fail_silently=True)
+
     finally:
         logging.debug("releasing lock...")
         lock.release()
