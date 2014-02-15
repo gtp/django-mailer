@@ -94,10 +94,11 @@ def send_all():
                 connection = None
 
             if sent+deferred >= settings.EMAIL_MAX_EMAILS_PER_BATCH:
-                logging.info("Sent %d emails, having a break" % (sent+deferred))
+                logging.info("Warning: Sent %d emails, having a break" % (sent+deferred))
                 mail_admins(subject="email queue overflow",
-                            message="More than %d emails in the queue, consider checking network load" % settings.EMAIL_MAX_EMAILS_PER_BATCH,
+                            message="Warning: more than %d emails sent from the queue, consider checking network load" % settings.EMAIL_MAX_EMAILS_PER_BATCH,
                             fail_silently=True)
+                break
 
     finally:
         logging.debug("releasing lock...")
